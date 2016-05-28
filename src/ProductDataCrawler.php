@@ -48,10 +48,15 @@ class ProductDataCrawler
         $objects = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($this->path), RecursiveIteratorIterator::SELF_FIRST);
         foreach($objects as $name => $object){
 
+            if (!strpos($name, '.php')) {
+                continue;
+            }
+
             if (!is_file($name)) {
                 continue;
             }
 
+            echo $name."\n";
             $data = $this->getProduct($name);
 
             if (!$data) {

@@ -2,9 +2,6 @@
 
 namespace Simi\Crawler;
 
-
-use HTMLPurifier;
-use HTMLPurifier_Config;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use Simi\Crawler\Dto\CrawledHtmlData;
@@ -35,6 +32,8 @@ class HtmlDataCrawler
         preg_match_all("/\'UID\', \\'([a-zA-Z0-9]+)/im", $html, $id_matches);
         $productId = (isset($id_matches[1], $id_matches[1][0]) ? $id_matches[1][0] : null);
 
+        $html = strip_tags(preg_replace(['/<\\?.*(\\?>|$)/Us'], '', $html), '<img><div><a><b><i><strong><ul><li>');
+
         if (!$productId) {
             return null;
         }
@@ -42,9 +41,24 @@ class HtmlDataCrawler
         return new CrawledHtmlData(
             $productId,
             '',
-            $this->extractImage($html),
+            $this->extractImage(new Crawler($html)),
             ''
         );
+    }
+
+    private function extractImage(Crawler $crawler)
+    {
+        $sel = $crawler->filter('img.iz_originalimg');
+        if (!$sel) {
+            return null;
+        }
+
+        $node = $sel->getNode(0);
+        if (!$node) {
+            return null;
+        }
+
+        return $node->getAttribute('src');
     }
 
     public function run() {
@@ -61,7 +75,7 @@ class HtmlDataCrawler
                 continue;
             }
 
-            echo $name."\n";
+            echo ".";
             $data = $this->getHtmlDataForPath($name);
 
             if (!$data) {
@@ -78,17 +92,6 @@ class HtmlDataCrawler
     public function getHtmlData()
     {
         return $this->htmlData;
-    }
-
-    /**
-     * @param $crawler
-     */
-    private function extractImage($html)
-    {
-
-        $matches = [];
-        preg_match_all('/class=\"iz_originalimg\" src=\"([^"]+)/m', $html, $matches);
-        return (isset($matches[1], $matches[1][0]) ? $matches[1][0] : null);
     }
 
 }

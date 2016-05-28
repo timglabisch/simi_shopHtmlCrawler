@@ -56,7 +56,7 @@ class ProductDataCrawler
                 continue;
             }
 
-            echo $name."\n";
+            echo ".";
             $data = $this->getProduct($name);
 
             if (!$data) {
